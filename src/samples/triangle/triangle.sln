@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "triangle", "triangle.csproj", "{B68BF2E3-36DF-4D93-9FEB-95F0F7C832AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vk.samples.base", "..\vk.samples.base\vk.samples.base.csproj", "{944D4AF5-B35D-47FF-9639-C397CE759D4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vk", "..\..\vk\vk.csproj", "{D8573039-9FE1-4554-A659-4E77CFBA83C1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B68BF2E3-36DF-4D93-9FEB-95F0F7C832AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B68BF2E3-36DF-4D93-9FEB-95F0F7C832AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B68BF2E3-36DF-4D93-9FEB-95F0F7C832AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B68BF2E3-36DF-4D93-9FEB-95F0F7C832AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{944D4AF5-B35D-47FF-9639-C397CE759D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{944D4AF5-B35D-47FF-9639-C397CE759D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{944D4AF5-B35D-47FF-9639-C397CE759D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{944D4AF5-B35D-47FF-9639-C397CE759D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8573039-9FE1-4554-A659-4E77CFBA83C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8573039-9FE1-4554-A659-4E77CFBA83C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8573039-9FE1-4554-A659-4E77CFBA83C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8573039-9FE1-4554-A659-4E77CFBA83C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

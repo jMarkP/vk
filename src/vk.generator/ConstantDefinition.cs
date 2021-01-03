@@ -6,9 +6,16 @@ namespace Vk.Generator
     public class ConstantDefinition
     {
         public string Name { get; }
+        public string Alias { get; }
         public string Value { get; }
         public ConstantType Type { get; }
         public string Comment { get; }
+
+        public ConstantDefinition(string name, string alias)
+        {
+            Name = name;
+            Alias = alias;
+        }
 
         public ConstantDefinition(string name, string value, string comment)
         {
@@ -39,6 +46,11 @@ namespace Vk.Generator
             Require.NotNull(xe);
 
             string name = xe.GetNameAttribute();
+            string alias = xe.Attribute("alias")?.Value;
+            if (!string.IsNullOrEmpty(alias))
+            {
+                return new ConstantDefinition(name, alias);
+            }
             string value = xe.Attribute("value").Value;
             string comment = xe.Attribute("comment")?.Value;
 

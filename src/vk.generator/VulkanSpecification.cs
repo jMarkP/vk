@@ -51,11 +51,17 @@ namespace Vk.Generator
             var commands = registry.Element("commands");
             CommandDefinition[] commandDefinitions = commands.Elements("command")
                 .Select(commandx => CommandDefinition.CreateFromXml(commandx)).ToArray();
+            commandDefinitions = ResolveAliases(commandDefinitions).ToArray();
+
+            ExtensionDefinition[] extensions = registry.Element("extensions").Elements("extension")
+                .Select(xe => ExtensionDefinition.CreateFromXml(xe)).ToArray();
 
             ConstantDefinition[] constantDefinitions = registry.Elements("enums")
                 .Where(enumx => enumx.Attribute("name").Value == "API Constants")
                 .SelectMany(enumx => enumx.Elements("enum"))
                 .Select(enumxx => ConstantDefinition.CreateFromXml(enumxx)).ToArray();
+            constantDefinitions = AddExtensionConstants(constantDefinitions, extensions);
+            constantDefinitions = ResolveAliases(constantDefinitions).ToArray();
 
             var types = registry.Elements("types");
             TypedefDefinition[] typedefDefinitions = types.Elements("type").Where(xe => xe.Value.Contains("typedef") && xe.HasCategoryAttribute("bitmask"))
@@ -79,13 +85,13 @@ namespace Vk.Generator
             string[] bitmaskTypes = types.Elements("type").Where(typex => typex.HasCategoryAttribute("bitmask"))
                 .Select(typex => typex.GetNameElement()).ToArray();
 
-            Dictionary<string, string> baseTypes = types.Elements("type").Where(typex => typex.HasCategoryAttribute("basetype"))
+            Dictionary<string, string> baseTypes = types.Elements("type")
+                .Where(typex => typex.HasCategoryAttribute("basetype"))
+                .Where(typex => typex.Element("type") != null)
                 .ToDictionary(
                     typex => typex.GetNameElement(),
-                    typex => typex.Element("type").Value);
+                    typex => typex.Element("type")?.Value);
 
-            ExtensionDefinition[] extensions = registry.Element("extensions").Elements("extension")
-                .Select(xe => ExtensionDefinition.CreateFromXml(xe)).ToArray();
 
             return new VulkanSpecification(
                 commandDefinitions, 
@@ -112,15 +118,80 @@ namespace Vk.Generator
                 foreach (var enumEx in exDef.EnumExtensions)
                 {
                     EnumDefinition enumDef = GetEnumDef(enums, enumEx.ExtendedType);
+                    if (!string.IsNullOrEmpty(enumEx.Alias))
+                    {
+                        continue;
+                    }
                     int value = int.Parse(enumEx.Value);
-                    enumDef.Values = enumDef.Values.Append(new EnumValue(enumEx.Name, value, null)).ToArray();
+                    enumDef.Values = enumDef.Values.Append(new EnumValue(enumEx.Name, value, enumEx.Comment)).ToArray();
                 }
             }
+        }
+
+
+        private static ConstantDefinition[] AddExtensionConstants(ConstantDefinition[] constants, ExtensionDefinition[] extensions)
+        {
+            var results = new List<ConstantDefinition>(constants);
+            foreach (ExtensionDefinition exDef in extensions)
+            {
+                if (new[] { "VK_EXT_extension_357", "VK_EXT_extension_359", "VK_EXT_extension_360", "VK_KHR_extension_361", }
+                .Contains(exDef.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    // Malformed
+                    continue;
+                }
+                foreach (var exConstant in exDef.Constants)
+                {
+                    if (!string.IsNullOrEmpty(exConstant.Alias))
+                    {
+                        results.Add(new ConstantDefinition(exConstant.Name, exConstant.Alias));
+                    }
+                    else
+                    {
+                        results.Add(new ConstantDefinition(exConstant.Name, exConstant.Value, exConstant.Comment));
+                    }
+                }
+            }
+            return results.ToArray();
         }
 
         private EnumDefinition GetEnumDef(EnumDefinition[] enums, string name)
         {
             return enums.Single(ed => ed.Name == name);
+        }
+
+        private static IEnumerable<CommandDefinition> ResolveAliases(CommandDefinition[] raw)
+        {
+            var lookup = raw.ToDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
+            foreach(var input in raw)
+            {
+                if (string.IsNullOrEmpty(input.Alias))
+                {
+                    yield return input;
+                }
+                else
+                {
+                    var original = lookup[input.Alias];
+                    yield return new CommandDefinition(input.Name, original.ReturnType, original.Parameters, original.SuccessCodes, original.ErrorCodes, original.IsVariant);
+                }
+            }
+        }
+
+        private static IEnumerable<ConstantDefinition> ResolveAliases(ConstantDefinition[] raw)
+        {
+            var lookup = raw.ToDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
+            foreach (var input in raw)
+            {
+                if (string.IsNullOrEmpty(input.Alias))
+                {
+                    yield return input;
+                }
+                else
+                {
+                    var original = lookup[input.Alias];
+                    yield return new ConstantDefinition(input.Name, original.Value, original.Comment);
+                }
+            }
         }
     }
 }

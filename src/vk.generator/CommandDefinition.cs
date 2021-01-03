@@ -7,11 +7,18 @@ namespace Vk.Generator
     public class CommandDefinition
     {
         public string Name { get; }
+        public string Alias { get; }
         public TypeSpec ReturnType { get; }
         public ParameterDefinition[] Parameters { get; }
         public string[] SuccessCodes { get; }
         public string[] ErrorCodes { get; }
         public bool IsVariant { get; }
+
+        public CommandDefinition(string name, string alias)
+        {
+            Name = name;
+            Alias = alias;
+        }
 
         public CommandDefinition(string name, TypeSpec returnType, ParameterDefinition[] parameters, string[] successCodes, string[] errorCodes, bool isVariant)
         {
@@ -31,8 +38,15 @@ namespace Vk.Generator
         {
             Require.Equal("command", xe.Name);
 
+            var alias = xe.Attribute("alias");
             var proto = xe.Element("proto");
-            string name = proto.Element("name").Value;
+            string name = xe.Attribute("name")?.Value ?? proto.Element("name").Value;
+
+            if (alias != null)
+            {
+                return new CommandDefinition(name, alias.Value);
+            }
+
             string returnTypeName = proto.Element("type").Value;
             TypeSpec returnType = new TypeSpec(returnTypeName);
 

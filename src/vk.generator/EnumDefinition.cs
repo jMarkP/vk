@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -38,12 +39,30 @@ namespace Vk.Generator
 
             string name = xe.Attribute("name").Value;
             EnumValue[] values = xe.Elements("enum").Select(valuesx => EnumValue.CreateFromXml(valuesx, type == EnumType.Bitmask)).ToArray();
+            values = ResolveAliases(values).ToArray();
             return new EnumDefinition(name, type, values);
         }
 
         public override string ToString()
         {
             return $"Enum: {Name} ({Type})[{Values.Length}]";
+        }
+
+        private static IEnumerable<EnumValue> ResolveAliases(EnumValue[] raw)
+        {
+            var lookup = raw.ToDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
+            foreach (var input in raw)
+            {
+                if (string.IsNullOrEmpty(input.Alias))
+                {
+                    yield return input;
+                }
+                else
+                {
+                    var original = lookup[input.Alias];
+                    yield return new EnumValue(input.Name, original.ValueOrBitPosition, input.Comment);
+                }
+            }
         }
     }
 
@@ -57,8 +76,16 @@ namespace Vk.Generator
     public class EnumValue
     {
         public string Name { get; }
+        public string Alias { get; }
         public int ValueOrBitPosition { get; }
         public string Comment { get; }
+
+        public EnumValue(string name, string alias, string comment)
+        {
+            Name = name;
+            Alias = alias;
+            Comment = comment;
+        }
 
         public EnumValue(string name, int value, string comment)
         {
@@ -72,6 +99,12 @@ namespace Vk.Generator
             Require.NotNull(xe);
 
             string name = xe.Attribute("name").Value;
+            string alias = xe.Attribute("alias")?.Value;
+            string comment = xe.Attribute("comment")?.Value ?? string.Empty;
+            if (!string.IsNullOrEmpty(alias))
+            {
+                return new EnumValue(name, alias, comment);
+            }
 
             int value;
             string valueStr = xe.Attribute("value")?.Value;
@@ -93,8 +126,6 @@ namespace Vk.Generator
                 value = 1 << int.Parse(bitposStr);
             }
 
-            var commentAttr = xe.Attribute("comment");
-            string comment = commentAttr != null ? commentAttr.Value : string.Empty;
             return new EnumValue(name, value, comment);
         }
     }

@@ -26,7 +26,7 @@
   </ItemGroup>
   <Target Name="AutoGenerateBindings" BeforeTargets="CoreCompile">
     <PropertyGroup>
-      <VkGeneratorExecutable>$(BinDir)/$(Configuration)/vk.generator/netcoreapp2.0/vk.generator.dll</VkGeneratorExecutable>
+      <VkGeneratorExecutable>$(BinDir)/$(Configuration)/vk.generator/net5.0/vk.generator.dll</VkGeneratorExecutable>
     </PropertyGroup>
     <Message Text="Generating bindings." />
     <Exec Command="dotnet $(VkGeneratorExecutable) --out $(MSBuildThisFileDirectory)Generated" />

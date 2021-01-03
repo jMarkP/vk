@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
@@ -45,9 +46,16 @@ namespace Vk.Generator
                 foreach (var enumXE in require.Elements("enum"))
                 {
                     string enumName = enumXE.GetNameAttribute();
+                    string enumAlias = enumXE.Attribute("alias")?.Value;
+                    string enumComment = enumXE.Attribute("comment")?.Value ?? string.Empty;
                     string extends = enumXE.Attribute("extends")?.Value;
                     if (extends != null)
                     {
+                        if (!string.IsNullOrEmpty(enumAlias))
+                        {
+                            enumExtensions.Add(new EnumExtensionValue(extends, enumName, enumAlias, null, enumComment));
+                            continue;
+                        }
                         string valueString;
                         string offsetString = enumXE.Attribute("offset")?.Value;
                         if (offsetString != null)
@@ -75,15 +83,20 @@ namespace Vk.Generator
                                 valueString = enumXE.Attribute("value").Value;
                             }
                         }
-                        enumExtensions.Add(new EnumExtensionValue(extends, enumName, valueString));
+                        enumExtensions.Add(new EnumExtensionValue(extends, enumName, null, valueString, enumComment));
                     }
                     else
                     {
+                        if (!string.IsNullOrEmpty(enumAlias))
+                        {
+                            extensionConstants.Add(new ExtensionConstant(enumName, null, enumAlias, enumComment));
+                            continue;
+                        }
                         var valueAttribute = enumXE.Attribute("value");
                         if (valueAttribute == null)
                             continue;
 
-                        extensionConstants.Add(new ExtensionConstant(name, valueAttribute.Value));
+                        extensionConstants.Add(new ExtensionConstant(enumName, valueAttribute.Value, null, enumComment));
                     }
                 }
                 foreach (var commandXE in require.Elements("command"))
@@ -99,10 +112,14 @@ namespace Vk.Generator
     {
         public string Name { get; }
         public string Value { get; }
-        public ExtensionConstant(string name, string value)
+        public string Alias { get; }
+        public string Comment { get; }
+        public ExtensionConstant(string name, string value, string alias, string comment)
         {
             Name = name;
             Value = value;
+            Alias = alias;
+            Comment = comment;
         }
     }
 
@@ -111,13 +128,17 @@ namespace Vk.Generator
     {
         public string ExtendedType { get; }
         public string Name { get; }
+        public string Alias { get; }
         public string Value { get; }
+        public string Comment { get; }
 
-        public EnumExtensionValue(string extendedType, string name, string value)
+        public EnumExtensionValue(string extendedType, string name, string alias, string value, string comment)
         {
             ExtendedType = extendedType;
             Name = name;
+            Alias = alias;
             Value = value;
+            Comment = comment;
         }
 
         private string DebuggerDisplayString =>

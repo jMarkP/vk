@@ -48,13 +48,18 @@ namespace Vk.Generator
 
         public void AddMapping(string originalName, string newName)
         {
-            _nameMappings.Add(originalName, newName);
+            if (!_nameMappings.ContainsKey(originalName))
+                _nameMappings.Add(originalName, newName);
         }
 
         public string GetMappedName(string name)
         {
             if (_nameMappings.TryGetValue(name, out string mappedName))
             {
+                if (mappedName == name)
+                {
+                    throw new Exception();
+                }
                 return GetMappedName(mappedName);
             }
             else if (name.StartsWith("PFN"))

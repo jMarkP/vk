@@ -15,12 +15,12 @@ namespace Vk.Generator
 
         public static string GetNameElement(this XElement xe)
         {
-            return xe.Element("name").Value;
+            return xe.Element("name")?.Value ?? xe.GetNameAttribute();
         }
 
         public static string GetTypeElement(this XElement xe)
         {
-            return xe.Element("type").Value;
+            return xe.Element("type")?.Value ?? xe.GetTypeAttributeOrNull();
         }
 
         public static string GetTypeAttributeOrNull(this XElement xe)
