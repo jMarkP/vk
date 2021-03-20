@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace vk.registry.model
 {
@@ -19,7 +21,7 @@ namespace vk.registry.model
         public bool AllowDuplicate { get; private set; }
         public string CorrespondingObjectTypeEnum { get; private set; }
 
-        public void ReadFrom(XElement element)
+        public virtual void ReadFrom(XElement element)
         {
             var descendants = element.DescendantNodes().ToArray();
             Category = element.OptionalEnumAttribute<VulkanTypeCategory>("category");
@@ -41,6 +43,49 @@ namespace vk.registry.model
         public static VulkanTypeCategory? GetCategory(XElement element)
         {
             return element.OptionalEnumAttribute<VulkanTypeCategory>("category");
+        }
+    }
+
+    public class VulkanTypeEnum : VulkanType
+    {
+        // Contains a name that matches an 'enum' tag later on
+    }
+
+    public class VulkanTypeStructOrUnion : VulkanType
+    {
+        public Member[] Members { get; private set; }
+
+        public override void ReadFrom(XElement element)
+        {
+            base.ReadFrom(element);
+            Members = element
+                .XPathSelectElements("member")
+                .Select(e => new Member(e))
+                .ToArray();
+        }
+
+        public class Member
+        {
+            public string[] Values { get; private set; }
+            public string Len { get; private set; }
+            public string AltLen { get; private set; }
+            public bool ExternSync { get; private set; }
+            public bool Optional { get; private set; }
+            public string Selector { get; private set; }
+            public string Selection { get; private set; }
+            public bool NoAutoValidity { get; private set; }
+
+            public string TypeName { get; private set; }
+            public string Name { get; private set; }
+            public string Enum { get; private set; }
+            public string Comment { get; private set; }
+
+            public Member(XElement element)
+            {
+                Values = (element.StringAttribute("values") ?? "").Split(",", StringSplitOptions.RemoveEmptyEntries);
+                Len = element.StringAttribute("len");
+                AltLen = element.StringAttribute("altlen");
+            }
         }
     }
 }

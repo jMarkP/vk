@@ -12,7 +12,7 @@ namespace vk.registry.model
 
         public void ReadFrom(XElement element)
         {
-            _elements = element.ReadArray<VulkanType>("type");
+            _elements = ReadTypes(element);
             Comment = element.StringAttribute("comment");
         }
 
@@ -22,9 +22,17 @@ namespace vk.registry.model
                 .XPathSelectElements("type")
                 .Select(e =>
                 {
-                    var r = new T();
-                    r.ReadFrom(e);
-                    return r;
+                    var category = VulkanType.GetCategory(e);
+                    switch (category)
+                    {
+                        case VulkanTypeCategory.Struct:
+                        case VulkanTypeCategory.Union:
+                            var result = new VulkanTypeStructOrUnion();
+                            result.ReadFrom(e);
+                            return result;
+                        default:
+                            return null;
+                    }
                 })
                 .ToArray();
        
